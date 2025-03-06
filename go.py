@@ -1,8 +1,9 @@
 from variables import SIZE, run, height, width, beige, LINE_COLOUR, space, COLOUR_ARRAY, PLAYER_ARRAY, current_player, block, liberties, opposing_player, seki_counter, moves
 
 import os
+import sys
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
-os.environ['PYGAME_DETECT_AVX2'] = '1' ##idk this is what my system(Arch Linux+Hyprland) was telling me to do
+
 import pygame as pg
 import numpy
 
@@ -24,7 +25,7 @@ LIBERTY  =  8
 
 
 ### GENERATE AND POPULATE BOARD
-prefill_board = [[EMPTY for x in range(SIZE)] for y in range(SIZE)]
+prefill_board = [[EMPTY for _ in range(SIZE)] for _ in range(SIZE)]
 
 
 ## ADD OFFBOARD IN CELLS
@@ -36,7 +37,6 @@ for i in range(SIZE):
 
 ## MAKE INTO MATRIX
 board = numpy.array(prefill_board,dtype=object).reshape(SIZE,SIZE)
-
 
 ### GAME & BOARD LOGIC FUNCTIONS
 
@@ -140,18 +140,18 @@ def captures(given_colour):
                 if len(liberties) == 0: # if there a 0 liberties, the block has been captured, it can be cleared
 
                         #if the move is 'ko' move but causes the capture of stone, then it is not allowed, unless it's the second move, in which it is dealt afterwards
-                        # to be honest this is logic I wrote 6 months and I'm not sure why it works but it does so, it's fine
+                        # to be honest this is logic I wrote 6 months ago and I'm not sure why it works but it does so, it's fine
 
-                    if seki_counter == 0:
+                    #if seki_counter == 0: #if this is the first seki in a sequence
                         
-                        check = True #there has been a capture
-                        remove_stones()
+                    #    check = True #there has been a capture
+                    #    remove_stones()
                         #seki_counter = 1
-                        continue
+                    #    continue
 
-                    check = True
+                    check = True #confirms that there has been a capture
                     
-                    remove_stones()
+                    remove_stones() #remove the stones 
 
                 #we can remove all markers and liberties, allowing for the next iteration
                 remove_markings_and_liberties()   
@@ -186,7 +186,7 @@ def determine_if_neighbour(cell_row,cell_column):
 ## This is pretty straight forward
 pg.init()
 CLOCK = pg.time.Clock()
-screen = pg.display.set_mode((width,height),0,32)
+screen = pg.display.set_mode((width,height+80),0,32)
 pg.display.set_caption("Baduk")
 pygame_icon = pg.image.load(os.path.join(__location__,'app_icon.png'))
 pg.display.set_icon(pygame_icon)
@@ -214,6 +214,8 @@ def draw_board():
                     pg.draw.circle(screen,stone_colour,position_array,20)
                 except: pass
 
+    pg.draw.rect(screen,COLOUR_ARRAY[current_player],(space,height,width-2*space,space)) #turn indicator
+
     pg.display.update()
 draw_board() #I'm calling it so that it doesn't start on a black screen
 
@@ -225,6 +227,7 @@ while run:
     for event in pg.event.get():
 
         if event.type == pg.QUIT: # When x pressed end game (superfluous comment and unneccessary on Hyprland)
+            sys.exit()
             run = False
 
         if event.type == pg.MOUSEBUTTONDOWN: # If mouse is pressed
@@ -245,7 +248,7 @@ while run:
 
             else:
 
-                fallback_board = copy(board)
+                fallback_board = copy(board) #board that will be used as reference, copy only copies the values rather than the pointer, allowing for the comparison.
                 place_stone(cell_row,cell_column)
 
                 if seki_counter == 1:
